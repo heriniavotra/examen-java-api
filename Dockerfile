@@ -8,4 +8,4 @@ RUN mkdir /app/bin && javac -d /app/bin /app/src/*.java
 
 CMD ["java", "-cp", "bin", "Main"]
 
-EXPOSE 8080
+EXPOSE 8081

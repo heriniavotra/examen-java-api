@@ -4,7 +4,7 @@
 
 - Java JDK version 17 ou supérieure
 
-## Installation
+## Installation en local
 
 1. Clonez ce dépôt :
 
@@ -30,3 +30,26 @@ Après compilation, exécutez la classe principale avec :
 ```bash
 java -cp bin Main
 ```
+
+## Utilisation avec Docker
+
+1. Construisez l'image Docker :
+    ```bash
+    docker build -t examen-java-api .
+    ```
+
+2. Lancez le conteneur :
+    ```bash
+    docker run -d -p 8081:8081 examen-java-api
+    ```
+
+## Utilisation avec Docker Compose
+
+1. Assurez-vous d'avoir un fichier `docker-compose.yml` à la racine du projet.
+
+2. Démarrez les services :
+    ```bash
+    docker-compose up -d --build 
+    ```
+
+L'API sera accessible sur [http://localhost:8080]
