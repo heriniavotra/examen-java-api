@@ -1,0 +1,29 @@
+# Ignore compiled Java class files
+*.class
+
+# Ignore JAR files
+*.jar
+*.war
+*.ear
+
+# Ignore log files
+*.log
+
+# Ignore build directories
+/bin/
+/build/
+/out/
+/target/
+
+# Ignore IDE files
+*.iml
+*.ipr
+*.iws
+.idea/
+*.classpath
+*.project
+*.settings/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
