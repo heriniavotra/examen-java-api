@@ -1,0 +1,10 @@
+services:
+  java-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    volumes:
+      - .:/app
+  
