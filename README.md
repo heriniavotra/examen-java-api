@@ -1,18 +1,32 @@
-## Getting Started
+# REST API Java - Sans Framework
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+## Prérequis
 
-## Folder Structure
+- Java JDK version 17 ou supérieure
 
-The workspace contains two folders by default, where:
+## Installation
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+1. Clonez ce dépôt :
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+    ```bash
+    git clone https://github.com/heriniavotra/examen-java-api.git
+    cd examen-java-api
+    ```
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+2. Créez un dossier `bin` pour les fichiers compilés :
+    ```bash
+    mkdir bin
+    ```
 
-## Dependency Management
+3. Compilez le projet avec la commande :
+    ```bash
+    javac -d bin src/*.java
+    ```
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+## Exécution
+
+Après compilation, exécutez la classe principale avec :
+
+```bash
+java -cp bin Main
+```
