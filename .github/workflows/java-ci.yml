@@ -31,8 +31,8 @@ jobs:
           sleep 5
           curl http://localhost:8081/
 
-      - name: 🐳 Build Docker Image
-        run: docker build -t rest-api-java .
+      - name: 🐳 Build Docker Image API
+        run: docker build -t rest-api-java src/Dockerfile .
 
   
 
