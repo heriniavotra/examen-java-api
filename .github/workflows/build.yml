@@ -22,6 +22,14 @@ jobs:
 
       - name: Compile Java
         run: javac -d bin src/*.java
-
+      
+      - name: Run Tests
+        run: |
+          if [ -f bin/Main.class ]; then
+            java -cp bin Main
+          else
+            echo "No Main class found, skipping tests."
+          fi
+      
       - name: Build Docker Image
         run: docker build -t rest-api-java .
