@@ -1,4 +1,3 @@
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -13,6 +12,14 @@ public class TaskHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
+
+        handleCors(exchange); 
+
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            // Réponse CORS aux requêtes préflight
+            exchange.sendResponseHeaders(204, -1);
+            return;
+        }
 
         switch (path) {
             case "/tickets/enqueue":
@@ -77,21 +84,28 @@ public class TaskHandler implements HttpHandler {
         }
     }
 
+    private void handleSize(HttpExchange exchange) throws IOException {
+        int size = queue.size();
+        respond(exchange, 200, "📏 Taille de la file : " + size);
+    }
+
     private void respond(HttpExchange exchange, int statusCode, String message) throws IOException {
         byte[] response = message.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
         exchange.sendResponseHeaders(statusCode, response.length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(response);
-        os.close();
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response);
+        }
     }
 
     private void respondMethodNotAllowed(HttpExchange exchange) throws IOException {
         respond(exchange, 405, "❌ Méthode non autorisée");
     }
 
-    private void handleSize(HttpExchange exchange) throws IOException {
-        int size = queue.size();
-        respond(exchange, 200, "📏 Taille de la file : " + size);
+    // ✅ CORS handler à appliquer sur toutes les requêtes
+    private void handleCors(HttpExchange exchange) {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "*");
     }
 }
