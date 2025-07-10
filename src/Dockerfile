@@ -2,7 +2,7 @@ FROM openjdk:21-ea-21-slim-buster
 
 WORKDIR /app
 
-COPY *.java ./
+COPY ./src/*.java ./
 
 RUN mkdir -p bin && javac -d bin src/*.java
 
