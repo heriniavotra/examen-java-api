@@ -25,7 +25,7 @@ jobs:
       
       - name: Run server in background
         run: |
-          java -cp bin src.Main &
+          java -cp bin Main &
           sleep 5
           curl http://localhost:8081/
       
