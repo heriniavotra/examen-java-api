@@ -32,7 +32,7 @@ jobs:
           curl http://localhost:8081/
 
       - name: 🐳 Build Docker Image API
-        run: docker build -t rest-api-java -f src/Dockerfile .
+        run: docker build -t rest-api-java .
 
     
 
