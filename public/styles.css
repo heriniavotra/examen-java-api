@@ -1,57 +1,148 @@
 body {
   font-family: 'Segoe UI', sans-serif;
-  background: #f5f7fa;
-  color: #333;
-  margin: 0;
-  padding: 2rem;
+  background: #f0f2f5;
   display: flex;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
 }
 
-.container {
-  background: white;
-  padding: 2rem;
+.ticket-container {
+  background: #fff;
+  padding: 2rem 3rem;
   border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
   width: 100%;
-  max-width: 500px;
+  text-align: center;
+  position: relative;
 }
 
 h1 {
-  text-align: center;
-  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: #222;
 }
 
-.form-group, .actions {
+.ticket-info {
+  margin-bottom: 2rem;
+}
+
+.row {
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
   margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.row.centered {
+  justify-content: center;
+  font-size: 1rem;
+  color: #555;
+}
+
+.label {
+  font-weight: bold;
+  text-decoration: underline;
+  color: #333;
+}
+
+.value {
+  font-weight: bold;
+  color: #0066cc;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
 }
 
 input[type="number"] {
-  flex: 1;
-  padding: 0.6rem;
+  padding: 0.5rem;
   border-radius: 8px;
   border: 1px solid #ccc;
+  width: 100%;
+  margin-bottom: 1rem;
 }
 
-button {
+.btn {
+  flex: 1 1 45%;
   padding: 0.6rem 1rem;
-  background-color: #0066ff;
-  color: white;
   border: none;
   border-radius: 8px;
+  font-weight: bold;
   cursor: pointer;
+  color: white;
+  transition: background 0.3s;
+}
+
+/* Couleurs personnalisées */
+.btn-green {
+  background-color: #28a745;
+}
+.btn-green:hover {
+  background-color: #218838;
+}
+
+.btn-red {
+  background-color: #dc3545;
+}
+.btn-red:hover {
+  background-color: #c82333;
+}
+
+.btn-blue {
+  background-color: #007bff;
+}
+.btn-blue:hover {
+  background-color: #0056b3;
+}
+
+.btn-yellow {
+  background-color: #ffc107;
+  color: black;
+}
+.btn-yellow:hover {
+  background-color: #e0a800;
 }
 
 button:hover {
-  background-color: #0050cc;
+  background-color: #004dc1;
 }
 
-.output {
-  margin-top: 1rem;
-  background: #f0f0f0;
-  padding: 1rem;
-  border-radius: 8px;
-  min-height: 2rem;
+/* Alert styles */
+.alert {
+  position: absolute;
+  top: -60px; /* place l'alerte au-dessus du conteneur */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.25rem;
+  background: #dff0d8;
+  color: #3c763d;
+  border: 1px solid #d6e9c6;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s ease;
+  z-index: 10;
+}
+
+.alert.show {
+  top: -10px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.alert.error {
+  background: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+.hidden {
+  display: none;
 }
