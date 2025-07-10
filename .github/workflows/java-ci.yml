@@ -34,8 +34,7 @@ jobs:
       - name: 🐳 Build Docker Image API
         run: docker build -t rest-api-java -f src/Dockerfile .
 
-      - name: Build Docker Image Web
-        run: dockerbuild -t web-app-java -f public/Dockerfile .
+    
 
   
 
