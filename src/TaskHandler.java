@@ -16,7 +16,7 @@ public class TaskHandler implements HttpHandler {
         handleCors(exchange); 
 
         if ("OPTIONS".equalsIgnoreCase(method)) {
-            // Réponse CORS aux requêtes préflight
+           
             exchange.sendResponseHeaders(204, -1);
             return;
         }
@@ -49,7 +49,16 @@ public class TaskHandler implements HttpHandler {
                 else
                     respondMethodNotAllowed(exchange);
                 break;
+                
+            case "/tickets/isEmpty":
+                if ("GET".equalsIgnoreCase(method)) {
+                    handleIsEmpty(exchange);
+                } else {
+                    respondMethodNotAllowed(exchange);
+                }
+                break;
 
+                
             default:
                 respond(exchange, 404, "❌ Route non trouvée");
         }
@@ -88,6 +97,15 @@ public class TaskHandler implements HttpHandler {
         int size = queue.size();
         respond(exchange, 200, "📏 Taille de la file : " + size);
     }
+
+    private void handleIsEmpty(HttpExchange exchange) throws IOException {
+        if (queue.isEmpty()) {
+            respond(exchange, 200, "✅ La file est vide");
+        } else {
+            respond(exchange, 200, "❌ La file n'est pas vide");
+        }
+    }
+    
 
     private void respond(HttpExchange exchange, int statusCode, String message) throws IOException {
         byte[] response = message.getBytes(StandardCharsets.UTF_8);
