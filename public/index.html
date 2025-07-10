@@ -1,29 +1,47 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestion FIFO Java</title>
+  <title>Ticket FIFO - Agence Yas</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <div class="container">
-    <h1>🎫 Gestionnaire de file FIFO</h1>
+  <div class="ticket-container">
+    <h1>Agence Yas Ankorondrano</h1>
 
-    <div class="form-group">
-      <input type="number" id="valueInput" placeholder="Entrez un nombre" />
-      <button onclick="enqueue()">Enqueue</button>
+    <div class="ticket-info">
+      <div class="row">
+        <span class="label">Ticket N° :</span>
+        <span class="value" id="ticketNum">---</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Guichet N° :</span>
+        <span class="value">05</span>
+      </div>
+
+      <div class="row centered">
+        <span id="waitMessage">Il y a encore -- personnes en attente.</span>
+      </div>
     </div>
 
-    <div class="actions">
-      <button onclick="peek()">👀 Peek</button>
-      <button onclick="dequeue()">🗑️ Dequeue</button>
-      <button onclick="getSize()">📏 Taille</button>
+    <div class="form-actions">
+      <input type="number" id="valueInput" placeholder="Numéro du ticket à ajouter" />
+
+      <button class="btn btn-green" onclick="enqueue()">🎫 Ajouter un ticket</button>
+      <button class="btn btn-red" onclick="dequeue()">📤 Appeler le ticket suivant</button>
+      <button class="btn btn-blue" onclick="peek()">🔍 Voir le prochain ticket</button>
+      <button class="btn btn-yellow" onclick="getSize()">📊 Voir la file d'attente</button>
     </div>
 
-    <div id="response" class="output"></div>
+
+    <div id="alert" class="alert hidden"></div>
   </div>
 
   <script src="app.js"></script>
 </body>
+
 </html>
