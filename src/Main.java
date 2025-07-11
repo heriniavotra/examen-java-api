@@ -1,5 +1,6 @@
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,29 +11,39 @@ public class Main {
         int port = 8081;
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
-       server.createContext("/swagger.yaml", exchange -> {
+       
+        server.createContext("/swagger.yaml", exchange -> {
             try {
-                byte[] content = Files.readAllBytes(Paths.get("swagger.yaml"));
-                exchange.getResponseHeaders().set("Content-Type", "application/yaml");
+                byte[] content = Files.readAllBytes(Paths.get("swagger.yaml")); 
+                exchange.getResponseHeaders().set("Content-Type", "application/x-yaml");
                 exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
                 exchange.sendResponseHeaders(200, content.length);
-                exchange.getResponseBody().write(content);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(content);
+                }
             } catch (IOException e) {
                 String errorMsg = "Erreur lors de la lecture du fichier swagger.yaml";
                 exchange.sendResponseHeaders(500, errorMsg.length());
-                exchange.getResponseBody().write(errorMsg.getBytes());
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(errorMsg.getBytes());
+                }
+            } finally {
+                exchange.close();
             }
-            exchange.close();
         });
- 
+
         server.createContext("/", exchange -> {
-            String swaggerUI = generateSwaggerUI();
+            String html = generateSwaggerUI();
             exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-            exchange.sendResponseHeaders(200, swaggerUI.getBytes().length);
-            exchange.getResponseBody().write(swaggerUI.getBytes());
-            exchange.close();
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            exchange.sendResponseHeaders(200, html.getBytes().length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(html.getBytes());
+            } finally {
+                exchange.close();
+            }
         });
-      
+
         server.createContext("/tickets", new TaskHandler());
 
         server.setExecutor(null);
@@ -40,17 +51,9 @@ public class Main {
         server.start();
     }
 
-    private static void sendResponse(com.sun.net.httpserver.HttpExchange exchange, int statusCode, String response)
-            throws IOException {
-        exchange.sendResponseHeaders(statusCode, response.getBytes().length);
-        try (java.io.OutputStream os = exchange.getResponseBody()) {
-            os.write(response.getBytes());
-        }
-    }
-
     private static String generateSwaggerUI() {
         return "<!DOCTYPE html>\n" +
-                "<html lang=\"en\">\n" +
+                "<html lang=\"fr\">\n" +
                 "<head>\n" +
                 "  <meta charset=\"UTF-8\">\n" +
                 "  <title>Swagger UI</title>\n" +

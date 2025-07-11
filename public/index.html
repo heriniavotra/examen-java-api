@@ -9,35 +9,58 @@
 </head>
 
 <body>
+
   <div class="ticket-container">
     <h1>Agence Yas Ankorondrano</h1>
 
-    <div class="ticket-info">
-      <div class="row">
-        <span class="label">Ticket N° :</span>
-        <span class="value" id="ticketNum">---</span>
+    <!-- Deux blocs côte à côte -->
+    <div class="section-flex">
+      <!-- Bloc 1 -->
+      <div class="section-box">
+        <h2 class="section-title">🎫 Informations</h2>
+        <div class="ticket-info">
+          <div class="row">
+            <span class="label">Ticket N° :</span>
+          </div>
+
+          <div class="row row-center">
+            <span class="value" id="ticketNum">---</span>
+          </div>
+
+
+          <div class="row">
+            <span class="label">Guichet N° :</span>
+            <select id="guichetSelect">
+              <option value="1">01</option>
+              <option value="2">02</option>
+              <option value="3">03</option>
+              <option value="4">04</option>
+              <option value="5" selected>05</option>
+            </select>
+          </div>
+
+          <div class="row centered">
+            <span id="waitMessage">Il y a encore -- personnes en attente.</span>
+          </div>
+        </div>
       </div>
 
-      <div class="row">
-        <span class="label">Guichet N° :</span>
-        <span class="value">05</span>
-      </div>
+      <!-- Bloc 2 -->
+      <div class="section-box">
+        <h2 class="section-title">⚙️ Actions</h2>
+        <div class="form-actions">
+          <input type="number" id="valueInput" placeholder="Numéro du ticket à ajouter" />
 
-      <div class="row centered">
-        <span id="waitMessage">Il y a encore -- personnes en attente.</span>
+          <button class="btn btn-green" onclick="enqueue()">🎫 Ajouter un ticket</button>
+          <button class="btn btn-red" onclick="dequeue()">📤 Appeler le ticket suivant</button>
+          <button class="btn btn-blue" onclick="peek()">🔍 Voir le prochain ticket</button>
+          <button class="btn btn-purple" onclick="showGuichets()">👥 Tous les guichets actifs</button>
+          <button class="btn btn-black" onclick="resetQueue()">🔄 Réinitialiser la file</button>
+        </div>
       </div>
     </div>
 
-    <div class="form-actions">
-      <input type="number" id="valueInput" placeholder="Numéro du ticket à ajouter" />
-
-      <button class="btn btn-green" onclick="enqueue()">🎫 Ajouter un ticket</button>
-      <button class="btn btn-red" onclick="dequeue()">📤 Appeler le ticket suivant</button>
-      <button class="btn btn-blue" onclick="peek()">🔍 Voir le prochain ticket</button>
-      <button class="btn btn-yellow" onclick="getSize()">📊 Voir la file d'attente</button>
-    </div>
-
-
+    <!-- Alerte -->
     <div id="alert" class="alert hidden"></div>
   </div>
 

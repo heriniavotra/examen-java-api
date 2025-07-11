@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Ticket Queue API
-  description: API pour gérer une file FIFO de tickets (enqueue, dequeue, peek, size, isEmpty)
+  description: API pour gérer une file FIFO de tickets (enqueue, dequeue, peek, size, isEmpty, guichets)
   version: 1.0.0
 servers:
   - url: http://localhost:8081
@@ -38,6 +38,7 @@ paths:
               schema:
                 type: string
                 example: "❌ Méthode non autorisée"
+
   /tickets/peek:
     get:
       summary: Voir le prochain ticket sans le retirer
@@ -63,6 +64,7 @@ paths:
               schema:
                 type: string
                 example: "❌ Méthode non autorisée"
+
   /tickets/dequeue:
     delete:
       summary: Retirer le prochain ticket de la file
@@ -88,6 +90,7 @@ paths:
               schema:
                 type: string
                 example: "❌ Méthode non autorisée"
+
   /tickets/size:
     get:
       summary: Obtenir la taille de la file
@@ -106,6 +109,7 @@ paths:
               schema:
                 type: string
                 example: "❌ Méthode non autorisée"
+
   /tickets/isEmpty:
     get:
       summary: Vérifier si la file est vide
@@ -124,4 +128,93 @@ paths:
               schema:
                 type: string
                 example: "❌ Méthode non autorisée"
+
+  /tickets/guichet/{id}/next:
+    post:
+      summary: Appeler le prochain ticket pour un guichet donné
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Numéro du guichet
+      responses:
+        '200':
+          description: Ticket appelé pour ce guichet
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "🎫 Guichet 1 → Ticket 42"
+        '400':
+          description: Numéro de guichet invalide
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Numéro de guichet invalide"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+
+  /tickets/guichet/{id}:
+    get:
+      summary: Voir le ticket actuellement au guichet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Numéro du guichet
+      responses:
+        '200':
+          description: Ticket en cours pour ce guichet
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "🔔 Guichet 1 appelle le ticket 42"
+        '400':
+          description: Numéro de guichet invalide
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Numéro de guichet invalide"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+
+  /tickets/guichets:
+    get:
+      summary: Voir tous les guichets et leur ticket en cours
+      responses:
+        '200':
+          description: Liste des guichets actifs
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  📋 Tickets en cours :
+                   - Guichet 1 : Ticket 42
+                   - Guichet 2 : Ticket 43
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+
 components: {}

@@ -14,7 +14,7 @@ body {
   border-radius: 12px;
   border: 1px solid #ddd;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  max-width: 400px;
+  max-width: 900px;
   width: 100%;
   text-align: center;
   position: relative;
@@ -24,6 +24,32 @@ h1 {
   font-size: 1.5rem;
   margin-bottom: 2rem;
   color: #222;
+}
+
+.section-flex {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.section-box {
+  flex: 1 1 45%;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  min-width: 280px;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #444;
+  border-left: 4px solid #007bff;
+  padding-left: 0.5rem;
+  text-align: left;
 }
 
 .ticket-info {
@@ -80,10 +106,10 @@ input[type="number"] {
   transition: background 0.3s;
 }
 
-/* Couleurs personnalisées */
 .btn-green {
   background-color: #28a745;
 }
+
 .btn-green:hover {
   background-color: #218838;
 }
@@ -91,6 +117,7 @@ input[type="number"] {
 .btn-red {
   background-color: #dc3545;
 }
+
 .btn-red:hover {
   background-color: #c82333;
 }
@@ -98,6 +125,7 @@ input[type="number"] {
 .btn-blue {
   background-color: #007bff;
 }
+
 .btn-blue:hover {
   background-color: #0056b3;
 }
@@ -106,18 +134,30 @@ input[type="number"] {
   background-color: #ffc107;
   color: black;
 }
+
 .btn-yellow:hover {
   background-color: #e0a800;
 }
 
-button:hover {
-  background-color: #004dc1;
+.btn-purple {
+  background-color: #6f42c1;
 }
 
-/* Alert styles */
+.btn-purple:hover {
+  background-color: #5936a2;
+}
+
+.btn-black {
+  background-color: #343a40;
+}
+
+.btn-black:hover {
+  background-color: #1d2124;
+}
+
 .alert {
   position: absolute;
-  top: -60px; /* place l'alerte au-dessus du conteneur */
+  top: -60px;
   left: 50%;
   transform: translateX(-50%);
   padding: 0.75rem 1.25rem;
@@ -145,4 +185,9 @@ button:hover {
 
 .hidden {
   display: none;
+}
+
+.row-center {
+  justify-content: center;
+  gap: 1rem;
 }
