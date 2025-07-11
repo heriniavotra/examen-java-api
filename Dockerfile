@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY src /app/src
 
+COPY swagger.yaml /app/swagger.yaml
+
 RUN mkdir /app/bin && javac -d /app/bin /app/src/*.java
 
 CMD ["java", "-cp", "bin", "Main"]
