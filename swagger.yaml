@@ -5,6 +5,7 @@ info:
   version: 1.0.0
 servers:
   - url: http://localhost:8081
+  - url: https://server-api-java.up.railway.app
 paths:
   /tickets/enqueue:
     post:
