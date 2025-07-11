@@ -6,106 +6,105 @@ import java.nio.charset.StandardCharsets;
 
 public class TaskHandler implements HttpHandler {
 
-    private static final Fifo queue = new Fifo();
+    private final TaskService service = new TaskService();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
-        String method = exchange.getRequestMethod();
+        String method = exchange.getRequestMethod().toUpperCase();
 
-        handleCors(exchange); 
+        handleCors(exchange);
 
-        if ("OPTIONS".equalsIgnoreCase(method)) {
-           
+        if ("OPTIONS".equals(method)) {
             exchange.sendResponseHeaders(204, -1);
             return;
         }
 
+        // Routes statiques
         switch (path) {
             case "/tickets/enqueue":
-                if ("POST".equalsIgnoreCase(method))
-                    handleEnqueue(exchange);
-                else
-                    respondMethodNotAllowed(exchange);
-                break;
+                if ("POST".equals(method)) handleEnqueue(exchange);
+                else respondMethodNotAllowed(exchange);
+                return;
 
             case "/tickets/peek":
-                if ("GET".equalsIgnoreCase(method))
-                    handlePeek(exchange);
-                else
-                    respondMethodNotAllowed(exchange);
-                break;
+                if ("GET".equals(method)) respond(exchange, 200, service.peek());
+                else respondMethodNotAllowed(exchange);
+                return;
 
             case "/tickets/dequeue":
-                if ("DELETE".equalsIgnoreCase(method))
-                    handleDequeue(exchange);
-                else
-                    respondMethodNotAllowed(exchange);
-                break;
+                if ("DELETE".equals(method)) respond(exchange, 200, service.dequeue());
+                else respondMethodNotAllowed(exchange);
+                return;
 
             case "/tickets/size":
-                if ("GET".equalsIgnoreCase(method))
-                    handleSize(exchange);
-                else
-                    respondMethodNotAllowed(exchange);
-                break;
-                
-            case "/tickets/isEmpty":
-                if ("GET".equalsIgnoreCase(method)) {
-                    handleIsEmpty(exchange);
-                } else {
-                    respondMethodNotAllowed(exchange);
-                }
-                break;
+                if ("GET".equals(method)) respond(exchange, 200, service.size());
+                else respondMethodNotAllowed(exchange);
+                return;
 
-                
-            default:
-                respond(exchange, 404, "❌ Route non trouvée");
+            case "/tickets/isEmpty":
+                if ("GET".equals(method)) respond(exchange, 200, service.isEmpty());
+                else respondMethodNotAllowed(exchange);
+                return;
         }
+
+        // Routes dynamiques
+        if (path.matches("/tickets/guichet/\\d+/next")) {
+            if ("POST".equals(method)) {
+                try {
+                    int guichetId = Integer.parseInt(path.split("/")[3]);
+                    respond(exchange, 200, service.nextForGuichet(guichetId));
+                } catch (NumberFormatException e) {
+                    respond(exchange, 400, "❌ Numéro de guichet invalide");
+                }
+            } else {
+                respondMethodNotAllowed(exchange);
+            }
+            return;
+        }
+
+        if (path.matches("/tickets/guichet/\\d+")) {
+            if ("GET".equals(method)) {
+                try {
+                    int guichetId = Integer.parseInt(path.split("/")[3]);
+                    respond(exchange, 200, service.getCurrentTicketForGuichet(guichetId));
+                } catch (NumberFormatException e) {
+                    respond(exchange, 400, "❌ Numéro de guichet invalide");
+                }
+            } else {
+                respondMethodNotAllowed(exchange);
+            }
+            return;
+        }
+
+        if ("/tickets/guichets".equals(path)) {
+            if ("GET".equals(method)) {
+                respond(exchange, 200, service.getAllGuichets());
+            } else {
+                respondMethodNotAllowed(exchange);
+            }
+            return;
+        }
+
+        // Route non reconnue
+        respond(exchange, 404, "❌ Route non trouvée");
     }
 
     private void handleEnqueue(HttpExchange exchange) throws IOException {
-        String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).readLine();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8));
+        String body = reader.readLine();
+        if (body == null || body.isEmpty()) {
+            respond(exchange, 400, "❌ Corps de la requête vide");
+            return;
+        }
+
         try {
             int value = Integer.parseInt(body.trim());
-            queue.enqueue(value);
-            respond(exchange, 200, "✔️ Ticket ajouté : " + value);
-        } catch (Exception e) {
+            respond(exchange, 200, service.enqueue(value));
+        } catch (NumberFormatException e) {
             respond(exchange, 400, "❌ Valeur invalide");
         }
     }
-
-    private void handlePeek(HttpExchange exchange) throws IOException {
-        if (queue.isEmpty()) {
-            respond(exchange, 404, "❌ File vide");
-        } else {
-            int value = queue.peek();
-            respond(exchange, 200, "👀 Prochain ticket : " + value);
-        }
-    }
-
-    private void handleDequeue(HttpExchange exchange) throws IOException {
-        if (queue.isEmpty()) {
-            respond(exchange, 404, "❌ File vide");
-        } else {
-            int value = queue.dequeue();
-            respond(exchange, 200, "✔️ Ticket retiré : " + value);
-        }
-    }
-
-    private void handleSize(HttpExchange exchange) throws IOException {
-        int size = queue.size();
-        respond(exchange, 200, "📏 Taille de la file : " + size);
-    }
-
-    private void handleIsEmpty(HttpExchange exchange) throws IOException {
-        if (queue.isEmpty()) {
-            respond(exchange, 200, "✅ La file est vide");
-        } else {
-            respond(exchange, 200, "❌ La file n'est pas vide");
-        }
-    }
-    
 
     private void respond(HttpExchange exchange, int statusCode, String message) throws IOException {
         byte[] response = message.getBytes(StandardCharsets.UTF_8);
@@ -120,7 +119,6 @@ public class TaskHandler implements HttpHandler {
         respond(exchange, 405, "❌ Méthode non autorisée");
     }
 
-    // ✅ CORS handler à appliquer sur toutes les requêtes
     private void handleCors(HttpExchange exchange) {
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");

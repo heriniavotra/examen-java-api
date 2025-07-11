@@ -1,21 +1,18 @@
 import java.util.LinkedList;
 
 public class Fifo {
-    private LinkedList<Integer> queue;
-    
-    public Fifo() {
-        queue = new LinkedList<>();
+    private final LinkedList<Task> queue = new LinkedList<>();
+
+    public void enqueue(Task task) {
+        queue.addLast(task);
     }
 
-    public void enqueue(int value) {
-        queue.addLast(value);
+    public Task dequeue() {
+        return queue.isEmpty() ? null : queue.removeFirst();
     }
 
-    public Integer dequeue() {
-        if (queue.isEmpty()) {
-            return null; 
-        }
-        return queue.removeFirst();
+    public Task peek() {
+        return queue.isEmpty() ? null : queue.getFirst();
     }
 
     public boolean isEmpty() {
@@ -30,16 +27,8 @@ public class Fifo {
         queue.clear();
     }
 
-    public Integer peek() {
-        if (queue.isEmpty()) {
-            return null; 
-        }
-        return queue.getFirst();
-    }
-
     @Override
     public String toString() {
         return queue.toString();
     }
-    
 }
