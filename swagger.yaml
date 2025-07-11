@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: Ticket Queue API
+  description: API pour gérer une file FIFO de tickets (enqueue, dequeue, peek, size, isEmpty)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /tickets/enqueue:
+    post:
+      summary: Ajouter un ticket à la file
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "42"
+      responses:
+        '200':
+          description: Ticket ajouté avec succès
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "✔️ Ticket ajouté : 42"
+        '400':
+          description: Valeur invalide
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Valeur invalide"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+  /tickets/peek:
+    get:
+      summary: Voir le prochain ticket sans le retirer
+      responses:
+        '200':
+          description: Prochain ticket
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "👀 Prochain ticket : 42"
+        '404':
+          description: File vide
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ File vide"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+  /tickets/dequeue:
+    delete:
+      summary: Retirer le prochain ticket de la file
+      responses:
+        '200':
+          description: Ticket retiré
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "✔️ Ticket retiré : 42"
+        '404':
+          description: File vide
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ File vide"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+  /tickets/size:
+    get:
+      summary: Obtenir la taille de la file
+      responses:
+        '200':
+          description: Taille de la file
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "📏 Taille de la file : 3"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+  /tickets/isEmpty:
+    get:
+      summary: Vérifier si la file est vide
+      responses:
+        '200':
+          description: Statut de la file
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "✅ La file est vide"
+        '405':
+          description: Méthode non autorisée
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ Méthode non autorisée"
+components: {}
