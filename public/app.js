@@ -742,6 +742,15 @@ function cleanupQueueDOM() {
   }
 }
 
+// Exposer les fonctions nécessaires globalement pour les attributs onclick
+window.generateTicket = generateTicket;
+window.callNextTicket = callNextTicket;
+window.peekNextTicket = peekNextTicket;
+window.showAllGuichets = showAllGuichets;
+window.resetSystem = resetSystem;
+window.printReport = printReport;
+window.closeModal = closeModal;
+
 window.onload = () => {
   initializeTicketCounter();
   getSize();
