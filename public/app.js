@@ -699,6 +699,37 @@ function closeModal() {
   }
 }
 
+// EXPOSITION IMMÉDIATE DES FONCTIONS POUR LA PRODUCTION
+// Ceci garantit que les fonctions sont disponibles dès que possible
+(function exposeGlobalFunctions() {
+  console.log('🔧 Exposition immédiate des fonctions pour onclick...');
+  
+  // Vérifier que toutes les fonctions existent avant de les exposer
+  const functionsToExpose = {
+    generateTicket,
+    callNextTicket, 
+    peekNextTicket,
+    showAllGuichets,
+    resetSystem,
+    printReport,
+    closeModal,
+    confirmAction,
+    closeNotification
+  };
+  
+  // Exposer chaque fonction avec vérification
+  Object.entries(functionsToExpose).forEach(([name, func]) => {
+    if (typeof func === 'function') {
+      window[name] = func;
+      console.log(`✅ ${name} exposée`);
+    } else {
+      console.error(`❌ ${name} n'est pas une fonction:`, typeof func);
+    }
+  });
+  
+  console.log('🔧 Exposition terminée');
+})();
+
 // Initialisation au chargement avec gestion DOM de la file d'attente
 setInterval(getSize, 5000);
 
@@ -773,17 +804,6 @@ function attachEventListeners() {
   }
 }
 
-// IMPORTANT: Exposer toutes les fonctions globalement pour les attributs onclick
-window.generateTicket = generateTicket;
-window.callNextTicket = callNextTicket;
-window.peekNextTicket = peekNextTicket;
-window.showAllGuichets = showAllGuichets;
-window.resetSystem = resetSystem;
-window.printReport = printReport;
-window.closeModal = closeModal;
-window.confirmAction = confirmAction;
-window.closeNotification = closeNotification;
-
 // Initialisation principale avec logs de débogage
 function initializeApp() {
   console.log('=== INITIALISATION APP ===');
@@ -810,6 +830,28 @@ function initializeApp() {
   
   console.log('=== INITIALISATION TERMINÉE ===');
 }
+
+// IMPORTANT: Exposer toutes les fonctions globalement APRÈS leur définition
+console.log('Exposition des fonctions globalement...');
+window.generateTicket = generateTicket;
+window.callNextTicket = callNextTicket;
+window.peekNextTicket = peekNextTicket;
+window.showAllGuichets = showAllGuichets;
+window.resetSystem = resetSystem;
+window.printReport = printReport;
+window.closeModal = closeModal;
+window.confirmAction = confirmAction;
+window.closeNotification = closeNotification;
+
+// Vérifier immédiatement que les fonctions sont bien exposées
+console.log('Vérification des fonctions exposées:');
+console.log('- generateTicket:', typeof window.generateTicket);
+console.log('- callNextTicket:', typeof window.callNextTicket);
+console.log('- peekNextTicket:', typeof window.peekNextTicket);
+console.log('- showAllGuichets:', typeof window.showAllGuichets);
+console.log('- resetSystem:', typeof window.resetSystem);
+console.log('- printReport:', typeof window.printReport);
+console.log('- closeModal:', typeof window.closeModal);
 
 // Utiliser plusieurs points d'entrée pour assurer la compatibilité maximale
 if (document.readyState === 'loading') {
