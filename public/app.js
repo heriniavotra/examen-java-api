@@ -742,7 +742,62 @@ function cleanupQueueDOM() {
   }
 }
 
-// Exposer les fonctions nécessaires globalement pour les attributs onclick
+// Fonction pour attacher les event listeners
+function attachEventListeners() {
+  // Bouton générer ticket
+  const generateTicketBtn = document.getElementById('generateTicketBtn');
+  if (generateTicketBtn) {
+    generateTicketBtn.addEventListener('click', generateTicket);
+  }
+
+  // Bouton appeler suivant
+  const callNextTicketBtn = document.getElementById('callNextTicketBtn');
+  if (callNextTicketBtn) {
+    callNextTicketBtn.addEventListener('click', callNextTicket);
+  }
+
+  // Bouton voir suivant
+  const peekNextTicketBtn = document.getElementById('peekNextTicketBtn');
+  if (peekNextTicketBtn) {
+    peekNextTicketBtn.addEventListener('click', peekNextTicket);
+  }
+
+  // Bouton état des guichets
+  const showAllGuichetsBtn = document.getElementById('showAllGuichetsBtn');
+  if (showAllGuichetsBtn) {
+    showAllGuichetsBtn.addEventListener('click', showAllGuichets);
+  }
+
+  // Bouton réinitialiser
+  const resetSystemBtn = document.getElementById('resetSystemBtn');
+  if (resetSystemBtn) {
+    resetSystemBtn.addEventListener('click', resetSystem);
+  }
+
+  // Bouton rapport
+  const printReportBtn = document.getElementById('printReportBtn');
+  if (printReportBtn) {
+    printReportBtn.addEventListener('click', printReport);
+  }
+
+  // Bouton fermer modal
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeModal);
+  }
+
+  // Fermer modal en cliquant à l'extérieur
+  const modal = document.getElementById('modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  }
+}
+
+// Exposer les fonctions nécessaires globalement pour les attributs onclick (fallback)
 window.generateTicket = generateTicket;
 window.callNextTicket = callNextTicket;
 window.peekNextTicket = peekNextTicket;
@@ -765,4 +820,7 @@ window.onload = () => {
 
   // Initialiser la gestion DOM de la file d'attente
   initializeQueueDOM();
+  
+  // Attacher les event listeners
+  attachEventListeners();
 };
