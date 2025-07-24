@@ -3,68 +3,182 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ticket FIFO - Agence Yas</title>
+  <title>Système de Gestion de File d'Attente - Agence Yas</title>
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
 <body>
+  <!-- Header professionnel -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <i class="fas fa-university"></i>
+        <h1>Agence Yas Ankorondrano</h1>
+      </div>
+      <div class="datetime" id="datetime"></div>
+    </div>
+  </header>
 
-  <div class="ticket-container">
-    <h1>Agence Yas Ankorondrano</h1>
-
-    <!-- Deux blocs côte à côte -->
-    <div class="section-flex">
-      <!-- Bloc 1 -->
-      <div class="section-box">
-        <h2 class="section-title">🎫 Informations</h2>
-        <div class="ticket-info">
-          <div class="row">
-            <span class="label">Ticket N° :</span>
-          </div>
-
-          <div class="row row-center">
-            <span class="value" id="ticketNum">---</span>
-          </div>
-
-
-          <div class="row">
-            <span class="label">Guichet N° :</span>
-            <select id="guichetSelect">
-              <option value="1">01</option>
-              <option value="2">02</option>
-              <option value="3">03</option>
-              <option value="4">04</option>
-              <option value="5" selected>05</option>
-            </select>
-          </div>
-
-          <div class="row centered">
-            <span id="waitMessage">Il y a encore -- personnes en attente.</span>
-          </div>
+  <main class="main-container">
+    <!-- Section d'affichage principal -->
+    <div class="display-section">
+      <div class="current-ticket-display">
+        <h2><i class="fas fa-ticket-alt"></i> Ticket Actuel</h2>
+        <div class="ticket-number-large">
+          <span class="ticket-number" id="currentTicketNumber">000</span>
+        </div>
+        <div class="guichet-info">
+          <span>Guichet N° <span id="currentGuichet">--</span></span>
         </div>
       </div>
 
-      <!-- Bloc 2 -->
-      <div class="section-box">
-        <h2 class="section-title">⚙️ Actions</h2>
-        <div class="form-actions">
-          <input type="number" id="valueInput" placeholder="Numéro du ticket à ajouter" />
-
-          <button class="btn btn-green" onclick="enqueue()">🎫 Ajouter un ticket</button>
-          <button class="btn btn-red" onclick="dequeue()">📤 Appeler le ticket suivant</button>
-          <button class="btn btn-blue" onclick="peek()">🔍 Voir le prochain ticket</button>
-          <button class="btn btn-purple" onclick="showGuichets()">👥 Tous les guichets actifs</button>
-          <button class="btn btn-black" onclick="resetQueue()">🔄 Réinitialiser la file</button>
+      <div class="queue-stats">
+        <div class="stat-card">
+          <i class="fas fa-users"></i>
+          <div class="stat-info">
+            <span class="stat-number" id="waitingCount">0</span>
+            <span class="stat-label">En attente</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Alerte -->
-    <div id="alert" class="alert hidden"></div>
+    <!-- Section de contrôle -->
+    <div class="control-section">
+      <!-- Panel client -->
+      <div class="control-panel client-panel">
+        <h3><i class="fas fa-user"></i> Espace Client</h3>
+
+        <button class="btn btn-primary btn-large" onclick="generateTicket()">
+          <i class="fas fa-plus"></i>
+          Prendre un ticket
+        </button>
+
+        <div class="next-ticket-preview">
+          <span>Prochain numéro : </span>
+          <span class="next-number" id="nextTicketPreview">001</span>
+        </div>
+
+        <div class="ticket-stats">
+          <div class="stat-item">
+            <span class="stat-label">Tickets générés :</span>
+            <span class="stat-value" id="totalGenerated">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel employé -->
+      <div class="control-panel employee-panel">
+        <h3><i class="fas fa-user-tie"></i> Espace Employé</h3>
+
+        <div class="guichet-selection">
+          <label for="guichetSelect">Guichet actif :</label>
+          <select id="guichetSelect" class="guichet-select">
+            <option value="1">Guichet 01</option>
+            <option value="2">Guichet 02</option>
+            <option value="3">Guichet 03</option>
+            <option value="4">Guichet 04</option>
+            <option value="5" selected>Guichet 05</option>
+          </select>
+        </div>
+
+        <div class="employee-actions">
+          <button class="btn btn-success" onclick="callNextTicket()">
+            <i class="fas fa-arrow-right"></i>
+            Appeler suivant
+          </button>
+
+          <button class="btn btn-info" onclick="peekNextTicket()">
+            <i class="fas fa-eye"></i>
+            Voir suivant
+          </button>
+        </div>
+
+        <div class="current-serving">
+          <span>Vous servez : <strong id="servingTicket">Aucun</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section administrative -->
+    <div class="admin-section">
+      <h3><i class="fas fa-cogs"></i> Administration</h3>
+      <div class="admin-actions">
+        <button class="btn btn-secondary" onclick="showAllGuichets()">
+          <i class="fas fa-list"></i>
+          État des guichets
+        </button>
+
+        <button class="btn btn-danger" onclick="resetSystem()">
+          <i class="fas fa-redo"></i>
+          Réinitialiser
+        </button>
+
+        <button class="btn btn-dark" onclick="printReport()">
+          <i class="fas fa-print"></i>
+          Rapport
+        </button>
+      </div>
+    </div>
+
+    <!-- File d'attente améliorée -->
+    <div class="queue-display">
+      <h3><i class="fas fa-list-ol"></i> File d'attente en temps réel</h3>
+      <div class="queue-container">
+        <div class="queue-header">
+          <div class="queue-col">Position</div>
+          <div class="queue-col">Ticket N°</div>
+          <div class="queue-col">Temps d'attente</div>
+          <div class="queue-col">Statut</div>
+        </div>
+        <div class="queue-list" id="queueList">
+          <div class="queue-empty">
+            <i class="fas fa-inbox"></i>
+            <p>Aucun ticket en attente</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Éléments pour les messages -->
+  <div id="waitMessage" class="wait-message"></div>
+  <div id="ticketNum" class="ticket-num-display hidden"></div>
+
+  <!-- Modal pour les détails -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <button class="close" onclick="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+      <div id="modalBody"></div>
+    </div>
   </div>
 
   <script src="app.js"></script>
+  <script>
+    // Mise à jour de l'heure en temps réel
+    function updateDateTime() {
+      const now = new Date();
+      const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      };
+      document.getElementById('datetime').textContent = now.toLocaleDateString('fr-FR', options);
+    }
+
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    // Les fonctions de gestion de la file d'attente sont maintenant dans app.js
+    // et seront automatiquement initialisées au chargement de la page
+  </script>
 </body>
 
 </html>

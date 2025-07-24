@@ -13,6 +13,7 @@ public class TaskHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod().toUpperCase();
 
+        // Appliquer les en-têtes CORS en premier
         handleCors(exchange);
 
         if ("OPTIONS".equals(method)) {
@@ -44,6 +45,11 @@ public class TaskHandler implements HttpHandler {
 
             case "/tickets/isEmpty":
                 if ("GET".equals(method)) respond(exchange, 200, service.isEmpty());
+                else respondMethodNotAllowed(exchange);
+                return;
+
+            case "/tickets/reset":
+                if ("POST".equals(method)) respond(exchange, 200, service.reset());
                 else respondMethodNotAllowed(exchange);
                 return;
         }
@@ -120,8 +126,10 @@ public class TaskHandler implements HttpHandler {
     }
 
     private void handleCors(HttpExchange exchange) {
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS, PUT, PATCH");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "false");
+        exchange.getResponseHeaders().set("Access-Control-Max-Age", "3600");
     }
 }

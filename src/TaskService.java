@@ -81,4 +81,10 @@ public class TaskService {
                 .append(task.getValue()).append("\n"));
         return result.toString();
     }
+
+    public synchronized String reset() {
+        fifo.clear();
+        guichetMap.clear();
+        return "🧹 Système réinitialisé avec succès";
+    }
 }

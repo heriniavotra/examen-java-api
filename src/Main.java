@@ -14,9 +14,13 @@ public class Main {
        
         server.createContext("/swagger.yaml", exchange -> {
             try {
+                // Ajouter les en-têtes CORS
+                exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+                exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS, PUT, PATCH");
+                exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin");
+                
                 byte[] content = Files.readAllBytes(Paths.get("swagger.yaml")); 
                 exchange.getResponseHeaders().set("Content-Type", "application/x-yaml");
-                exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
                 exchange.sendResponseHeaders(200, content.length);
                 try (OutputStream os = exchange.getResponseBody()) {
                     os.write(content);
@@ -33,9 +37,13 @@ public class Main {
         });
 
         server.createContext("/", exchange -> {
+            // Ajouter les en-têtes CORS
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS, PUT, PATCH");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin");
+            
             String html = generateSwaggerUI();
             exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
             exchange.sendResponseHeaders(200, html.getBytes().length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(html.getBytes());
