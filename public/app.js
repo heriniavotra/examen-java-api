@@ -742,7 +742,55 @@ function cleanupQueueDOM() {
   }
 }
 
-window.onload = () => {
+// Fonction pour attacher les event listeners de manière robuste
+function attachEventListeners() {
+  console.log('Attachement des event listeners...');
+  
+  // Attendre que le DOM soit complètement chargé
+  const attachListeners = () => {
+    // Gérer les boutons même s'ils n'ont pas d'ID spécifique
+    const generateBtn = document.querySelector('[onclick*="generateTicket"]');
+    const callNextBtn = document.querySelector('[onclick*="callNextTicket"]');
+    const peekNextBtn = document.querySelector('[onclick*="peekNextTicket"]');
+    const showAllBtn = document.querySelector('[onclick*="showAllGuichets"]');
+    const resetBtn = document.querySelector('[onclick*="resetSystem"]');
+    const printBtn = document.querySelector('[onclick*="printReport"]');
+    const closeBtn = document.querySelector('[onclick*="closeModal"]');
+    
+    if (generateBtn) console.log('Bouton generateTicket trouvé');
+    if (callNextBtn) console.log('Bouton callNextTicket trouvé');
+    if (peekNextBtn) console.log('Bouton peekNextTicket trouvé');
+    if (showAllBtn) console.log('Bouton showAllGuichets trouvé');
+    if (resetBtn) console.log('Bouton resetSystem trouvé');
+    if (printBtn) console.log('Bouton printReport trouvé');
+    if (closeBtn) console.log('Bouton closeModal trouvé');
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachListeners);
+  } else {
+    attachListeners();
+  }
+}
+
+// IMPORTANT: Exposer toutes les fonctions globalement pour les attributs onclick
+window.generateTicket = generateTicket;
+window.callNextTicket = callNextTicket;
+window.peekNextTicket = peekNextTicket;
+window.showAllGuichets = showAllGuichets;
+window.resetSystem = resetSystem;
+window.printReport = printReport;
+window.closeModal = closeModal;
+window.confirmAction = confirmAction;
+window.closeNotification = closeNotification;
+
+// Initialisation principale avec logs de débogage
+function initializeApp() {
+  console.log('=== INITIALISATION APP ===');
+  console.log('Hostname:', window.location.hostname);
+  console.log('API_URL:', API_URL);
+  console.log('Type generateTicket:', typeof generateTicket);
+  
   initializeTicketCounter();
   getSize();
 
@@ -756,4 +804,46 @@ window.onload = () => {
 
   // Initialiser la gestion DOM de la file d'attente
   initializeQueueDOM();
+  
+  // Attacher les event listeners
+  attachEventListeners();
+  
+  console.log('=== INITIALISATION TERMINÉE ===');
+}
+
+// Utiliser plusieurs points d'entrée pour assurer la compatibilité maximale
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
+
+// Fallback avec window.onload
+window.addEventListener('load', () => {
+  console.log('Window loaded - vérification des fonctions globales');
+  console.log('window.generateTicket:', typeof window.generateTicket);
+  console.log('window.callNextTicket:', typeof window.callNextTicket);
+  console.log('window.peekNextTicket:', typeof window.peekNextTicket);
+  
+  // Test de connexion API
+  console.log('Test connexion API...');
+  fetch(`${API_URL}/size`)
+    .then(res => {
+      console.log('API Status:', res.status);
+      return res.text();
+    })
+    .then(text => {
+      console.log('API Response:', text);
+    })
+    .catch(err => {
+      console.error('Erreur API:', err);
+    });
+});
+
+window.onload = () => {
+  // Fallback pour compatibilité
+  if (typeof window.generateTicket === 'undefined') {
+    console.warn('Fonctions non définies, re-initialisation...');
+    initializeApp();
+  }
 };
