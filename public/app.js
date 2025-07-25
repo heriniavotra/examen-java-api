@@ -92,6 +92,10 @@ function calculateRealWaitTime(ticketNumber) {
 // Exposer les fonctions globalement pour index.html
 window.calculateRealWaitTime = calculateRealWaitTime;
 window.getTicketCounter = () => ticketCounter;
+window.storeTicketCreationTime = storeTicketCreationTime;
+window.updateNextTicketPreview = updateNextTicketPreview;
+window.initializeTicketCounter = initializeTicketCounter;
+window.saveTicketCounter = saveTicketCounter;
 
 // Fonctions DOM pour l'affichage enrichi de la file d'attente
 function updateQueueDisplayDOM() {
@@ -396,6 +400,12 @@ function showUpdateIndicatorDOM() {
 window.updateQueueDisplayDOM = updateQueueDisplayDOM;
 window.updateWaitTimesDOM = updateWaitTimesDOM;
 window.showUpdateIndicatorDOM = showUpdateIndicatorDOM;
+window.showNotification = showNotification;
+window.updateTicketCalled = updateTicketCalled;
+window.updateWaitMessage = updateWaitMessage;
+window.getSize = getSize;
+window.showModal = showModal;
+window.showConfirmModal = showConfirmModal;
 
 // Système de notifications amélioré
 function showNotification(message, type = 'success', duration = 5000) {
@@ -743,26 +753,123 @@ function cleanupQueueDOM() {
 }
 
 window.onload = () => {
+  console.log('DOM chargé - Initialisation de l\'application...');
+  console.log('Hostname:', window.location.hostname);
+  console.log('API_URL:', API_URL);
+  
   initializeTicketCounter();
   getSize();
 
   if (guichetSelect) {
+    console.log('GuichetSelect trouvé, valeur:', guichetSelect.value);
     const guichetId = guichetSelect.value;
     fetch(`${API_URL}/guichet/${guichetId}`)
       .then(res => res.text())
       .then(text => updateTicketCalled(text))
-      .catch(() => updateTicketCalled("---"));
+      .catch((error) => {
+        console.error('Erreur lors de la récupération du guichet:', error);
+        updateTicketCalled("---");
+      });
+  } else {
+    console.warn('GuichetSelect non trouvé');
   }
 
   // Initialiser la gestion DOM de la file d'attente
   initializeQueueDOM();
+  
+  // Initialiser les event listeners pour une compatibilité maximale
+  initializeEventListeners();
+  
+  console.log('Application initialisée avec succès');
 };
 
-// Exposer les fonctions globalement pour l'accès depuis l'HTML
+// Fonction pour initialiser les event listeners
+function initializeEventListeners() {
+  console.log('Initialisation des event listeners...');
+  
+  // Associer les événements aux boutons
+  const generateBtn = document.querySelector('button[onclick*="generateTicket"]');
+  if (generateBtn) {
+    console.log('Bouton generateTicket trouvé');
+    generateBtn.removeAttribute('onclick');
+    generateBtn.addEventListener('click', generateTicket);
+  }
+  
+  const callNextBtn = document.querySelector('button[onclick*="callNextTicket"]');
+  if (callNextBtn) {
+    console.log('Bouton callNextTicket trouvé');
+    callNextBtn.removeAttribute('onclick');
+    callNextBtn.addEventListener('click', callNextTicket);
+  }
+  
+  const peekNextBtn = document.querySelector('button[onclick*="peekNextTicket"]');
+  if (peekNextBtn) {
+    console.log('Bouton peekNextTicket trouvé');
+    peekNextBtn.removeAttribute('onclick');
+    peekNextBtn.addEventListener('click', peekNextTicket);
+  }
+  
+  const showGuichetsBtn = document.querySelector('button[onclick*="showAllGuichets"]');
+  if (showGuichetsBtn) {
+    console.log('Bouton showAllGuichets trouvé');
+    showGuichetsBtn.removeAttribute('onclick');
+    showGuichetsBtn.addEventListener('click', showAllGuichets);
+  }
+  
+  const resetBtn = document.querySelector('button[onclick*="resetSystem"]');
+  if (resetBtn) {
+    console.log('Bouton resetSystem trouvé');
+    resetBtn.removeAttribute('onclick');
+    resetBtn.addEventListener('click', resetSystem);
+  }
+  
+  const printBtn = document.querySelector('button[onclick*="printReport"]');
+  if (printBtn) {
+    console.log('Bouton printReport trouvé');
+    printBtn.removeAttribute('onclick');
+    printBtn.addEventListener('click', printReport);
+  }
+  
+  const closeBtn = document.querySelector('button[onclick*="closeModal"]');
+  if (closeBtn) {
+    console.log('Bouton closeModal trouvé');
+    closeBtn.removeAttribute('onclick');
+    closeBtn.addEventListener('click', closeModal);
+  }
+  
+  console.log('Event listeners initialisés avec succès');
+}
+
+// Exposer toutes les fonctions globalement pour les rendre accessibles depuis les attributs onclick
 window.generateTicket = generateTicket;
 window.callNextTicket = callNextTicket;
 window.peekNextTicket = peekNextTicket;
-window.printReport = printReport;
 window.showAllGuichets = showAllGuichets;
 window.resetSystem = resetSystem;
+window.printReport = printReport;
 window.closeModal = closeModal;
+window.confirmAction = confirmAction;
+window.closeNotification = closeNotification;
+window.initializeEventListeners = initializeEventListeners;
+
+// Protection contre les erreurs JavaScript
+window.addEventListener('error', function(event) {
+  console.error('Erreur JavaScript globale:', event.error);
+  console.error('Message:', event.message);
+  console.error('Fichier:', event.filename);
+  console.error('Ligne:', event.lineno);
+});
+
+// Protection contre les erreurs de promesses non gérées
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('Promesse rejetée non gérée:', event.reason);
+});
+
+// Vérification que toutes les fonctions sont bien exposées
+console.log('Fonctions exposées globalement:');
+console.log('- generateTicket:', typeof window.generateTicket);
+console.log('- callNextTicket:', typeof window.callNextTicket);
+console.log('- peekNextTicket:', typeof window.peekNextTicket);
+console.log('- showAllGuichets:', typeof window.showAllGuichets);
+console.log('- resetSystem:', typeof window.resetSystem);
+console.log('- printReport:', typeof window.printReport);
