@@ -757,3 +757,12 @@ window.onload = () => {
   // Initialiser la gestion DOM de la file d'attente
   initializeQueueDOM();
 };
+
+// Exposer les fonctions globalement pour l'accès depuis l'HTML
+window.generateTicket = generateTicket;
+window.callNextTicket = callNextTicket;
+window.peekNextTicket = peekNextTicket;
+window.printReport = printReport;
+window.showAllGuichets = showAllGuichets;
+window.resetSystem = resetSystem;
+window.closeModal = closeModal;
