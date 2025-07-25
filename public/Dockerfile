@@ -1,6 +1,9 @@
 FROM nginx:alpine
 
-COPY . /usr/share/nginx/html
+# Copier seulement les fichiers nécessaires pour l'application web
+COPY index.html /usr/share/nginx/html/
+COPY app.js /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
 
 EXPOSE 80
 
