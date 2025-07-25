@@ -1,6 +1,5 @@
-//const isLocal = window.location.hostname === "localhost";
-//const API_URL = isLocal? "http://localhost:8081/tickets": "https://server-api-java.up.railway.app/tickets";
-const API_URL = "https://server-api-java.up.railway.app/tickets"; // URL de l'API pour la production
+const isLocal = window.location.hostname === "localhost";
+const API_URL = isLocal? "http://localhost:8081/tickets": "https://server-api-java.up.railway.app/tickets";
 
 const alertBox = document.getElementById("alert");
 const ticketNumDisplay = document.getElementById("ticketNum");
@@ -526,6 +525,8 @@ function generateTicket() {
       showNotification("❌ Erreur lors de la génération du ticket", 'error');
     });
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.generateTicket = generateTicket;
 
 function callNextTicket() {
   const guichetId = guichetSelect.value;
@@ -543,6 +544,8 @@ function callNextTicket() {
     })
     .catch(() => showNotification("❌ Erreur lors de l'appel du ticket", 'error'));
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.callNextTicket = callNextTicket;
 
 function peekNextTicket() {
   const guichetId = guichetSelect.value;
@@ -568,6 +571,8 @@ function peekNextTicket() {
     })
     .catch(() => showNotification("❌ Impossible d'afficher le prochain ticket", 'error'));
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.peekNextTicket = peekNextTicket;
 
 function getSize() {
   fetch(`${API_URL}/size`)
@@ -582,6 +587,8 @@ function showAllGuichets() {
     .then(text => showModal('État des guichets', text))
     .catch(() => showNotification("❌ Impossible d'afficher les guichets", 'error'));
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.showAllGuichets = showAllGuichets;
 
 function resetSystem() {
   showConfirmModal(
@@ -615,6 +622,8 @@ function resetSystem() {
     }
   );
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.resetSystem = resetSystem;
 
 function printReport() {
   const reportData = {
@@ -645,6 +654,8 @@ function printReport() {
   
   showModal('Rapport d\'activité', reportContent);
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.printReport = printReport;
 
 // Fonctions pour les modales
 function showModal(title, content) {
@@ -659,6 +670,8 @@ function showModal(title, content) {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.showModal = showModal;
 
 function showConfirmModal(title, message, onConfirm) {
   const modal = document.getElementById('modal');
@@ -682,6 +695,8 @@ function showConfirmModal(title, message, onConfirm) {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.showConfirmModal = showConfirmModal;
 
 function confirmAction() {
   if (window.pendingConfirmAction) {
@@ -690,6 +705,8 @@ function confirmAction() {
   }
   closeModal();
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.confirmAction = confirmAction;
 
 function closeModal() {
   const modal = document.getElementById('modal');
@@ -699,6 +716,8 @@ function closeModal() {
     window.pendingConfirmAction = null;
   }
 }
+// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+window.closeModal = closeModal;
 
 // EXPOSITION IMMÉDIATE DES FONCTIONS POUR LA PRODUCTION
 // Ceci garantit que les fonctions sont disponibles dès que possible
