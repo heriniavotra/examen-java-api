@@ -156,7 +156,7 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js" defer></script>
   <script>
     // Mise à jour de l'heure en temps réel
     function updateDateTime() {
@@ -175,6 +175,47 @@
 
     setInterval(updateDateTime, 1000);
     updateDateTime();
+
+    // Vérification debug pour s'assurer que les fonctions sont chargées
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, checking functions...');
+      setTimeout(() => {
+        console.log('generateTicket available:', typeof window.generateTicket);
+        console.log('callNextTicket available:', typeof window.callNextTicket);
+        if (typeof window.generateTicket === 'undefined') {
+          console.error('Functions not loaded! Defining fallback functions...');
+          // Définir les fonctions de base en tant que fallback
+          window.generateTicket = function() {
+            console.log('Fallback generateTicket called');
+            alert('Fonction en cours de chargement, veuillez réessayer dans un moment.');
+          };
+          window.callNextTicket = function() {
+            console.log('Fallback callNextTicket called');
+            alert('Fonction en cours de chargement, veuillez réessayer dans un moment.');
+          };
+          window.peekNextTicket = function() {
+            console.log('Fallback peekNextTicket called');
+            alert('Fonction en cours de chargement, veuillez réessayer dans un moment.');
+          };
+          window.showAllGuichets = function() {
+            console.log('Fallback showAllGuichets called');
+            alert('Fonction en cours de chargement, veuillez réessayer dans un moment.');
+          };
+          window.resetSystem = function() {
+            console.log('Fallback resetSystem called');
+            alert('Fonction en cours de chargement, veuillez réessayer dans un moment.');
+          };
+          window.printReport = function() {
+            console.log('Fallback printReport called');
+            alert('Fonction en cours de chargement, veuillez réessayer dans un moment.');
+          };
+          window.closeModal = function() {
+            const modal = document.getElementById('modal');
+            if (modal) modal.classList.add('hidden');
+          };
+        }
+      }, 100);
+    });
 
     // Les fonctions de gestion de la file d'attente sont maintenant dans app.js
     // et seront automatiquement initialisées au chargement de la page
