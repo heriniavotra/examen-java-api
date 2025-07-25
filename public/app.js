@@ -1,3 +1,7 @@
+// Wrapper pour s'assurer que le DOM est chargé avant d'initialiser
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, initializing app...');
+
 const isLocal = window.location.hostname === "localhost";
 const API_URL = isLocal? "http://localhost:8081/tickets": "https://server-api-java.up.railway.app/tickets";
 
@@ -909,3 +913,6 @@ window.onload = () => {
     initializeApp();
   }
 };
+
+  console.log('App initialization complete');
+}); // Fermeture du DOMContentLoaded wrapper
