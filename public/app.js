@@ -1,5 +1,6 @@
-const isLocal = window.location.hostname === "localhost";
-const API_URL = isLocal? "http://localhost:8081/tickets": "https://server-api-java.up.railway.app/tickets";
+//const isLocal = window.location.hostname === "localhost";
+//const API_URL = isLocal? "http://localhost:8081/tickets": "https://server-api-java.up.railway.app/tickets";
+const API_URL = "https://server-api-java.up.railway.app/tickets"; // URL de l'API pour la production
 
 const alertBox = document.getElementById("alert");
 const ticketNumDisplay = document.getElementById("ticketNum");
