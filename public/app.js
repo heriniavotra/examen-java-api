@@ -1,405 +1,14 @@
-// Wrapper pour s'assurer que le DOM est chargé avant d'initialiser
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM loaded, initializing app...');
-
+// Variables globales définies en dehors du DOMContentLoaded pour être accessibles partout
 const isLocal = window.location.hostname === "localhost";
-const API_URL = isLocal? "http://localhost:8081/tickets": "https://server-api-java.up.railway.app/tickets";
-
-const alertBox = document.getElementById("alert");
-const ticketNumDisplay = document.getElementById("ticketNum");
-const waitMessageDisplay = document.getElementById("waitMessage");
-const guichetSelect = document.getElementById("guichetSelect");
+const API_URL = isLocal ? "http://localhost:8081/tickets" : "https://server-api-java.up.railway.app/tickets";
 
 // Système de génération automatique de tickets
 let ticketCounter = 1;
 let totalTicketsGenerated = 0;
-let ticketCreationTimes = new Map(); // Stocker les heures de création des tickets
+let ticketCreationTimes = new Map();
 
-// Initialiser le compteur depuis le localStorage si disponible
-function initializeTicketCounter() {
-  const savedCounter = localStorage.getItem('ticketCounter');
-  const savedTotal = localStorage.getItem('totalGenerated');
-  const savedCreationTimes = localStorage.getItem('ticketCreationTimes');
-  
-  if (savedCounter) {
-    ticketCounter = parseInt(savedCounter);
-  }
-  if (savedTotal) {
-    totalTicketsGenerated = parseInt(savedTotal);
-    const totalElement = document.getElementById('totalGenerated');
-    if (totalElement) {
-      totalElement.textContent = totalTicketsGenerated;
-    }
-  }
-  
-  // Restaurer les temps de création des tickets
-  if (savedCreationTimes) {
-    try {
-      const entries = JSON.parse(savedCreationTimes);
-      ticketCreationTimes = new Map(entries);
-    } catch (e) {
-      ticketCreationTimes = new Map();
-    }
-  }
-  
-  updateNextTicketPreview();
-}
-
-// Sauvegarder le compteur
-function saveTicketCounter() {
-  localStorage.setItem('ticketCounter', ticketCounter.toString());
-  localStorage.setItem('totalGenerated', totalTicketsGenerated.toString());
-  localStorage.setItem('ticketCreationTimes', JSON.stringify(Array.from(ticketCreationTimes.entries())));
-}
-
-// Mettre à jour l'aperçu du prochain ticket
-function updateNextTicketPreview() {
-  const nextPreviewElement = document.getElementById('nextTicketPreview');
-  if (nextPreviewElement) {
-    nextPreviewElement.textContent = ticketCounter.toString().padStart(3, '0');
-  }
-}
-
-// Stocker l'heure de création d'un ticket
-function storeTicketCreationTime(ticketNumber) {
-  ticketCreationTimes.set(ticketNumber, Date.now());
-  
-  // Nettoyer les anciens tickets (garder seulement les 50 derniers)
-  if (ticketCreationTimes.size > 50) {
-    const entries = Array.from(ticketCreationTimes.entries());
-    entries.sort((a, b) => a[0] - b[0]);
-    
-    for (let i = 0; i < 20; i++) {
-      ticketCreationTimes.delete(entries[i][0]);
-    }
-  }
-}
-
-// Fonction pour calculer le temps d'attente réel d'un ticket
-function calculateRealWaitTime(ticketNumber) {
-  const now = Date.now();
-  
-  // Si on a l'heure de création stockée, utiliser la vraie durée
-  if (ticketCreationTimes.has(ticketNumber)) {
-    const creationTime = ticketCreationTimes.get(ticketNumber);
-    return Math.floor((now - creationTime) / 60000); // en minutes
-  }
-  
-  // Sinon, estimer basé sur la position dans la file
-  const waitingCount = parseInt(document.getElementById('waitingCount')?.textContent) || 0;
-  const position = Math.max(1, ticketCounter - ticketNumber);
-  
-  // Estimation : 2-5 minutes par position selon la position
-  return Math.max(1, Math.floor(position * 2.5 + Math.random() * 3));
-}
-
-// Exposer les fonctions globalement pour index.html
-window.calculateRealWaitTime = calculateRealWaitTime;
-window.getTicketCounter = () => ticketCounter;
-
-// Fonctions DOM pour l'affichage enrichi de la file d'attente
-function updateQueueDisplayDOM() {
-  const queueList = document.getElementById('queueList');
-  const waitingCount = parseInt(document.getElementById('waitingCount')?.textContent) || 0;
-
-  if (waitingCount === 0) {
-    queueList.innerHTML = `
-      <div class="queue-empty">
-        <div class="empty-icon-container">
-          <i class="fas fa-inbox"></i>
-          <div class="empty-pulse"></div>
-        </div>
-        <p>Aucun ticket en attente</p>
-        <div class="empty-suggestion">
-          <i class="fas fa-lightbulb"></i>
-          <span>Cliquez sur "Prendre un ticket" pour commencer</span>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // Générer les vrais numéros de tickets avec un DOM enrichi
-  let queueHTML = '';
-  const currentCounter = ticketCounter;
-  const startingTicket = Math.max(1, currentCounter - waitingCount);
-  const currentTime = new Date();
-  
-  for (let i = 0; i < Math.min(waitingCount, 15); i++) {
-    const realTicketNumber = startingTicket + i;
-    const position = i + 1;
-    const waitTime = calculateRealWaitTime(realTicketNumber);
-    
-    // Déterminer la priorité basée sur le temps d'attente
-    let priorityClass = 'waiting';
-    let priorityIcon = 'fas fa-clock';
-    let statusText = 'En attente';
-    let urgencyLevel = 'normal';
-    
-    if (waitTime > 15) {
-      priorityClass = 'urgent';
-      priorityIcon = 'fas fa-exclamation-triangle';
-      statusText = 'Urgent';
-      urgencyLevel = 'critical';
-    } else if (waitTime > 10) {
-      priorityClass = 'high';
-      priorityIcon = 'fas fa-hourglass-half';
-      statusText = 'Priorité haute';
-      urgencyLevel = 'high';
-    } else if (position <= 3) {
-      priorityClass = 'next';
-      priorityIcon = 'fas fa-arrow-right';
-      statusText = 'Bientôt appelé';
-      urgencyLevel = 'priority';
-    }
-
-    // Estimation de l'heure d'appel
-    const estimatedCallTime = new Date(currentTime.getTime() + waitTime * 60000);
-    const timeString = estimatedCallTime.toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-
-    queueHTML += `
-      <div class="queue-item queue-${priorityClass} urgency-${urgencyLevel}" 
-           data-ticket="${realTicketNumber}" 
-           data-position="${position}"
-           data-wait-time="${waitTime}"
-           style="animation-delay: ${i * 0.1}s">
-        
-        <!-- Colonne Position avec badge -->
-        <div class="queue-col position-col">
-          <div class="position-wrapper">
-            <span class="queue-position position-${position <= 3 ? 'priority' : 'normal'}">
-              <span class="position-number">#${position}</span>
-              ${position === 1 ? '<i class="fas fa-crown position-crown"></i>' : ''}
-            </span>
-            ${position <= 3 ? '<div class="priority-indicator"></div>' : ''}
-          </div>
-        </div>
-        
-        <!-- Colonne Numéro de ticket avec animations -->
-        <div class="queue-col ticket-col">
-          <div class="ticket-wrapper">
-            <span class="ticket-number ticket-highlight">
-              <i class="fas fa-ticket-alt ticket-icon"></i>
-              <span class="ticket-digits">${realTicketNumber.toString().padStart(3, '0')}</span>
-            </span>
-            <div class="ticket-meta">
-              <small class="ticket-time">Généré à ${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}</small>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Colonne Temps d'attente avec graphique -->
-        <div class="queue-col time-col">
-          <div class="wait-time-wrapper">
-            <span class="queue-wait-time time-${waitTime > 10 ? 'long' : 'normal'}">
-              <i class="fas fa-clock-o"></i>
-              <span class="time-value">${waitTime}</span>
-              <span class="time-unit">min</span>
-            </span>
-            <div class="time-progress">
-              <div class="progress-bar" style="width: ${Math.min(100, (waitTime / 20) * 100)}%"></div>
-            </div>
-            <small class="estimated-call">≈ ${timeString}</small>
-          </div>
-        </div>
-        
-        <!-- Colonne Statut avec détails -->
-        <div class="queue-col status-col">
-          <div class="status-wrapper">
-            <span class="status ${priorityClass}">
-              <i class="${priorityIcon} status-icon"></i>
-              <span class="status-text">${statusText}</span>
-            </span>
-            <div class="status-details">
-              ${position <= 3 ? '<span class="next-badge">Suivant</span>' : ''}
-              ${waitTime > 15 ? '<span class="urgent-badge">Urgent</span>' : ''}
-              <div class="status-dots">
-                <div class="dot ${priorityClass}"></div>
-                <div class="dot ${priorityClass}" style="animation-delay: 0.2s"></div>
-                <div class="dot ${priorityClass}" style="animation-delay: 0.4s"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Indicateurs latéraux -->
-        <div class="queue-indicators">
-          ${position === 1 ? '<div class="next-indicator"><i class="fas fa-bell"></i></div>' : ''}
-          ${waitTime > 15 ? '<div class="urgent-indicator"><i class="fas fa-exclamation"></i></div>' : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  // Afficher un indicateur s'il y a plus de tickets
-  if (waitingCount > 15) {
-    queueHTML += `
-      <div class="queue-item more-tickets">
-        <div class="queue-col">
-          <div class="more-icon">
-            <i class="fas fa-ellipsis-v"></i>
-            <div class="more-animation"></div>
-          </div>
-        </div>
-        <div class="queue-col">
-          <strong class="more-text">Plus de tickets</strong>
-        </div>
-        <div class="queue-col">
-          <span class="more-count">+${waitingCount - 15}</span>
-        </div>
-        <div class="queue-col">
-          <span class="status more">
-            <i class="fas fa-users"></i>
-            <span>En file</span>
-            <div class="pulse-indicator"></div>
-          </span>
-        </div>
-      </div>
-    `;
-  }
-
-  // Statistiques enrichies en bas du tableau
-  const avgWaitTime = Math.round(waitingCount * 3.5);
-  const nextTicketIn = Math.max(1, Math.round(avgWaitTime / waitingCount));
-  const busyLevel = waitingCount > 10 ? 'high' : waitingCount > 5 ? 'medium' : 'low';
-  
-  queueHTML += `
-    <div class="queue-stats-footer">
-      <div class="stats-header">
-        <h4><i class="fas fa-chart-bar"></i> Statistiques en temps réel</h4>
-        <div class="stats-refresh">
-          <i class="fas fa-sync-alt"></i>
-          <span>Mis à jour maintenant</span>
-        </div>
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-item waiting-stat">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-            <div class="stat-badge">${waitingCount}</div>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Personnes en attente</span>
-            <div class="stat-bar">
-              <div class="stat-fill" style="width: ${Math.min(100, (waitingCount / 20) * 100)}%"></div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="stat-item time-stat">
-          <div class="stat-icon">
-            <i class="fas fa-clock"></i>
-            <div class="stat-badge">${avgWaitTime}</div>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Temps moyen (min)</span>
-            <div class="time-indicator ${avgWaitTime > 15 ? 'long' : 'normal'}">
-              ${avgWaitTime > 15 ? 'Long' : avgWaitTime > 8 ? 'Moyen' : 'Court'}
-            </div>
-          </div>
-        </div>
-        
-        <div class="stat-item next-stat">
-          <div class="stat-icon">
-            <i class="fas fa-ticket-alt"></i>
-            <div class="stat-badge">${ticketCounter.toString().padStart(3, '0')}</div>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Prochain ticket</span>
-            <div class="next-time">Dans ~${nextTicketIn} min</div>
-          </div>
-        </div>
-        
-        <div class="stat-item activity-stat">
-          <div class="stat-icon">
-            <i class="fas fa-tachometer-alt"></i>
-            <div class="activity-level ${busyLevel}"></div>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Activité</span>
-            <div class="activity-text">
-              ${busyLevel === 'high' ? 'Très occupé' : busyLevel === 'medium' ? 'Modéré' : 'Calme'}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  queueList.innerHTML = queueHTML;
-  
-  // Ajouter l'animation d'entrée progressive
-  setTimeout(() => {
-    const items = queueList.querySelectorAll('.queue-item');
-    items.forEach((item, index) => {
-      setTimeout(() => {
-        item.classList.add('queue-item-visible');
-      }, index * 100);
-    });
-  }, 50);
-}
-
-// Mettre à jour les temps d'attente avec animation
-function updateWaitTimesDOM() {
-  const queueItems = document.querySelectorAll('.queue-item[data-ticket]');
-  queueItems.forEach(item => {
-    const ticketNumber = parseInt(item.dataset.ticket);
-    const waitTimeElement = item.querySelector('.time-value');
-    if (waitTimeElement) {
-      const oldWaitTime = parseInt(waitTimeElement.textContent);
-      const newWaitTime = calculateRealWaitTime(ticketNumber);
-      
-      // Animation seulement si le temps a changé
-      if (oldWaitTime !== newWaitTime) {
-        waitTimeElement.style.transition = 'all 0.3s ease';
-        waitTimeElement.style.transform = 'scale(1.1)';
-        
-        setTimeout(() => {
-          waitTimeElement.textContent = newWaitTime;
-          
-          // Mettre à jour la classe de temps
-          const waitTimeWrapper = item.querySelector('.queue-wait-time');
-          waitTimeWrapper.className = waitTimeWrapper.className.replace(/time-(long|normal)/, '');
-          waitTimeWrapper.classList.add(newWaitTime > 10 ? 'time-long' : 'time-normal');
-          
-          // Mettre à jour la barre de progression
-          const progressBar = item.querySelector('.progress-bar');
-          if (progressBar) {
-            progressBar.style.width = `${Math.min(100, (newWaitTime / 20) * 100)}%`;
-          }
-          
-          setTimeout(() => {
-            waitTimeElement.style.transform = 'scale(1)';
-          }, 150);
-        }, 150);
-      }
-    }
-  });
-}
-
-// Fonction pour montrer l'indicateur de mise à jour
-function showUpdateIndicatorDOM() {
-  const queueTitle = document.querySelector('.queue-display h3');
-  if (queueTitle && !queueTitle.classList.contains('updating')) {
-    queueTitle.classList.add('updating');
-    const originalText = queueTitle.innerHTML;
-    queueTitle.innerHTML = '<i class="fas fa-sync fa-spin"></i> Mise à jour de la file d\'attente...';
-    
-    setTimeout(() => {
-      queueTitle.innerHTML = originalText;
-      queueTitle.classList.remove('updating');
-    }, 1000);
-  }
-}
-
-// Exposer les fonctions DOM globalement
-window.updateQueueDisplayDOM = updateQueueDisplayDOM;
-window.updateWaitTimesDOM = updateWaitTimesDOM;
-window.showUpdateIndicatorDOM = showUpdateIndicatorDOM;
+console.log('🚀 Initialisation de app.js');
+console.log('API_URL:', API_URL);
 
 // Système de notifications amélioré
 function showNotification(message, type = 'success', duration = 5000) {
@@ -449,18 +58,56 @@ function showNotification(message, type = 'success', duration = 5000) {
 
 function closeNotification(element) {
   const notification = element.closest ? element.closest('.toast-notification') : element;
-  notification.classList.remove('show');
-  notification.classList.add('hide');
+  if (notification) {
+    notification.classList.remove('show');
+    notification.classList.add('hide');
+    
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }
+}
+
+// Fonctions utilitaires
+function initializeTicketCounter() {
+  const savedCounter = localStorage.getItem('ticketCounter');
+  const savedTotal = localStorage.getItem('totalGenerated');
   
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
+  if (savedCounter) {
+    ticketCounter = parseInt(savedCounter);
+  }
+  if (savedTotal) {
+    totalTicketsGenerated = parseInt(savedTotal);
+    const totalElement = document.getElementById('totalGenerated');
+    if (totalElement) {
+      totalElement.textContent = totalTicketsGenerated;
     }
-  }, 300);
+  }
+  
+  updateNextTicketPreview();
+}
+
+function saveTicketCounter() {
+  localStorage.setItem('ticketCounter', ticketCounter.toString());
+  localStorage.setItem('totalGenerated', totalTicketsGenerated.toString());
+}
+
+function updateNextTicketPreview() {
+  const nextPreviewElement = document.getElementById('nextTicketPreview');
+  if (nextPreviewElement) {
+    nextPreviewElement.textContent = ticketCounter.toString().padStart(3, '0');
+  }
+}
+
+function storeTicketCreationTime(ticketNumber) {
+  ticketCreationTimes.set(ticketNumber, Date.now());
 }
 
 function updateTicketCalled(ticketText) {
   const ticketNum = ticketText.match(/\d+/g)?.pop() || "---";
+  const ticketNumDisplay = document.getElementById("ticketNum");
   if (ticketNumDisplay) {
     ticketNumDisplay.innerText = ticketNum.padStart(3, "0");
   }
@@ -468,6 +115,7 @@ function updateTicketCalled(ticketText) {
   const currentTicketNumber = document.getElementById("currentTicketNumber");
   const currentGuichet = document.getElementById("currentGuichet");
   const servingTicket = document.getElementById("servingTicket");
+  const guichetSelect = document.getElementById("guichetSelect");
   
   if (currentTicketNumber) {
     currentTicketNumber.innerText = ticketNum.padStart(3, "0");
@@ -484,6 +132,7 @@ function updateTicketCalled(ticketText) {
 
 function updateWaitMessage(text) {
   const count = text.match(/\d+/)?.[0] || "0";
+  const waitMessageDisplay = document.getElementById("waitMessage");
   if (waitMessageDisplay) {
     waitMessageDisplay.innerText = `Il y a encore ${count} personne${count > 1 ? 's' : ''} en attente.`;
   }
@@ -494,8 +143,16 @@ function updateWaitMessage(text) {
   }
 }
 
-// Fonction pour générer automatiquement un ticket
+function getSize() {
+  fetch(`${API_URL}/size`)
+    .then((res) => res.text())
+    .then(updateWaitMessage)
+    .catch(() => showNotification("❌ Erreur lors du comptage de la file", 'error'));
+}
+
+// FONCTIONS PRINCIPALES - DÉFINIES GLOBALEMENT POUR ONCLICK
 function generateTicket() {
+  console.log('generateTicket appelée');
   const currentTicketNumber = ticketCounter;
   
   fetch(`${API_URL}/enqueue`, {
@@ -519,40 +176,30 @@ function generateTicket() {
       
       getSize();
       showNotification(`🎉 Ticket ${currentTicketNumber.toString().padStart(3, '0')} généré avec succès !`, 'success');
-      
-      // Mettre à jour l'affichage DOM de la file
-      setTimeout(() => {
-        updateQueueDisplayDOM();
-      }, 500);
     })
     .catch(() => {
       showNotification("❌ Erreur lors de la génération du ticket", 'error');
     });
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.generateTicket = generateTicket;
 
 function callNextTicket() {
-  const guichetId = guichetSelect.value;
+  console.log('callNextTicket appelée');
+  const guichetSelect = document.getElementById("guichetSelect");
+  const guichetId = guichetSelect ? guichetSelect.value : "1";
   fetch(`${API_URL}/guichet/${guichetId}/next`, { method: "POST" })
     .then((res) => res.text())
     .then((text) => {
       updateTicketCalled(text);
       getSize();
       showNotification("📤 " + text, 'info');
-      
-      // Mettre à jour l'affichage DOM de la file
-      setTimeout(() => {
-        updateQueueDisplayDOM();
-      }, 500);
     })
     .catch(() => showNotification("❌ Erreur lors de l'appel du ticket", 'error'));
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.callNextTicket = callNextTicket;
 
 function peekNextTicket() {
-  const guichetId = guichetSelect.value;
+  console.log('peekNextTicket appelée');
+  const guichetSelect = document.getElementById("guichetSelect");
+  const guichetId = guichetSelect ? guichetSelect.value : "1";
   Promise.all([
     fetch(`${API_URL}/guichet/${guichetId}`).then((res) => res.text()),
     fetch(`${API_URL}/peek`).then((res) => res.text())
@@ -563,10 +210,12 @@ function peekNextTicket() {
 
       if (!next || next === current) {
         showNotification("ℹ️ Aucun nouveau ticket après le ticket actuel.", 'info');
+        const ticketNumDisplay = document.getElementById("ticketNum");
         if (ticketNumDisplay) {
           ticketNumDisplay.innerText = "---";
         }
       } else {
+        const ticketNumDisplay = document.getElementById("ticketNum");
         if (ticketNumDisplay) {
           ticketNumDisplay.innerText = next.padStart(3, "0");
         }
@@ -575,26 +224,17 @@ function peekNextTicket() {
     })
     .catch(() => showNotification("❌ Impossible d'afficher le prochain ticket", 'error'));
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.peekNextTicket = peekNextTicket;
-
-function getSize() {
-  fetch(`${API_URL}/size`)
-    .then((res) => res.text())
-    .then(updateWaitMessage)
-    .catch(() => showNotification("❌ Erreur lors du comptage de la file", 'error'));
-}
 
 function showAllGuichets() {
+  console.log('showAllGuichets appelée');
   fetch(`${API_URL}/guichets`)
     .then(res => res.text())
     .then(text => showModal('État des guichets', text))
     .catch(() => showNotification("❌ Impossible d'afficher les guichets", 'error'));
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.showAllGuichets = showAllGuichets;
 
 function resetSystem() {
+  console.log('resetSystem appelée');
   showConfirmModal(
     'Confirmer la réinitialisation', 
     'Êtes-vous sûr de vouloir réinitialiser tout le système ? Cette action est irréversible.',
@@ -616,20 +256,14 @@ function resetSystem() {
           
           getSize();
           updateTicketCalled("---");
-          
-          // Mettre à jour l'affichage DOM de la file
-          setTimeout(() => {
-            updateQueueDisplayDOM();
-          }, 500);
         })
         .catch(() => showNotification("❌ Impossible de réinitialiser la file", 'error'));
     }
   );
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.resetSystem = resetSystem;
 
 function printReport() {
+  console.log('printReport appelée');
   const reportData = {
     totalGenerated: totalTicketsGenerated,
     currentCounter: ticketCounter,
@@ -658,61 +292,59 @@ function printReport() {
   
   showModal('Rapport d\'activité', reportContent);
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.printReport = printReport;
 
-// Fonctions pour les modales
 function showModal(title, content) {
+  console.log('showModal appelée');
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modalBody');
   
-  modalBody.innerHTML = `
-    <h3>${title}</h3>
-    <div class="modal-text">${content}</div>
-  `;
-  
-  modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  if (modal && modalBody) {
+    modalBody.innerHTML = `
+      <h3>${title}</h3>
+      <div class="modal-text">${content}</div>
+    `;
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.showModal = showModal;
 
 function showConfirmModal(title, message, onConfirm) {
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modalBody');
   
-  modalBody.innerHTML = `
-    <h3>${title}</h3>
-    <div class="modal-text">${message}</div>
-    <div class="modal-actions">
-      <button class="btn btn-danger" onclick="confirmAction()">
-        <i class="fas fa-check"></i> Confirmer
-      </button>
-      <button class="btn btn-secondary" onclick="closeModal()">
-        <i class="fas fa-times"></i> Annuler
-      </button>
-    </div>
-  `;
-  
-  window.pendingConfirmAction = onConfirm;
-  
-  modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  if (modal && modalBody) {
+    modalBody.innerHTML = `
+      <h3>${title}</h3>
+      <div class="modal-text">${message}</div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="confirmAction()">
+          <i class="fas fa-check"></i> Confirmer
+        </button>
+        <button class="btn btn-secondary" onclick="closeModal()">
+          <i class="fas fa-times"></i> Annuler
+        </button>
+      </div>
+    `;
+    
+    window.pendingConfirmAction = onConfirm;
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.showConfirmModal = showConfirmModal;
 
 function confirmAction() {
+  console.log('confirmAction appelée');
   if (window.pendingConfirmAction) {
     window.pendingConfirmAction();
     window.pendingConfirmAction = null;
   }
   closeModal();
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
-window.confirmAction = confirmAction;
 
 function closeModal() {
+  console.log('closeModal appelée');
   const modal = document.getElementById('modal');
   if (modal) {
     modal.classList.add('hidden');
@@ -720,124 +352,36 @@ function closeModal() {
     window.pendingConfirmAction = null;
   }
 }
-// EXPOSITION IMMÉDIATE APRÈS DÉFINITION
+
+// EXPOSITION IMMÉDIATE DES FONCTIONS PRINCIPALES
+window.generateTicket = generateTicket;
+window.callNextTicket = callNextTicket;
+window.peekNextTicket = peekNextTicket;
+window.showAllGuichets = showAllGuichets;
+window.resetSystem = resetSystem;
+window.printReport = printReport;
+window.showModal = showModal;
+window.showConfirmModal = showConfirmModal;
+window.confirmAction = confirmAction;
 window.closeModal = closeModal;
+window.closeNotification = closeNotification;
 
-// EXPOSITION IMMÉDIATE DES FONCTIONS POUR LA PRODUCTION
-// Ceci garantit que les fonctions sont disponibles dès que possible
-(function exposeGlobalFunctions() {
-  console.log('🔧 Exposition immédiate des fonctions pour onclick...');
-  
-  // Vérifier que toutes les fonctions existent avant de les exposer
-  const functionsToExpose = {
-    generateTicket,
-    callNextTicket, 
-    peekNextTicket,
-    showAllGuichets,
-    resetSystem,
-    printReport,
-    closeModal,
-    confirmAction,
-    closeNotification
-  };
-  
-  // Exposer chaque fonction avec vérification
-  Object.entries(functionsToExpose).forEach(([name, func]) => {
-    if (typeof func === 'function') {
-      window[name] = func;
-      console.log(`✅ ${name} exposée`);
-    } else {
-      console.error(`❌ ${name} n'est pas une fonction:`, typeof func);
-    }
-  });
-  
-  console.log('🔧 Exposition terminée');
-})();
+console.log('🚀 Fonctions exposées globalement immédiatement:');
+console.log('✅ generateTicket:', typeof window.generateTicket);
+console.log('✅ callNextTicket:', typeof window.callNextTicket);
+console.log('✅ peekNextTicket:', typeof window.peekNextTicket);
+console.log('✅ showAllGuichets:', typeof window.showAllGuichets);
+console.log('✅ resetSystem:', typeof window.resetSystem);
+console.log('✅ printReport:', typeof window.printReport);
 
-// Initialisation au chargement avec gestion DOM de la file d'attente
-setInterval(getSize, 5000);
-
-// Variables pour la gestion de la file d'attente
-let lastQueueCount = 0;
-let queueUpdateInterval;
-let waitTimeUpdateInterval;
-
-// Fonction pour initialiser la gestion DOM de la file d'attente
-function initializeQueueDOM() {
-  // Mise à jour initiale
-  setTimeout(() => {
-    updateQueueDisplayDOM();
-  }, 1000);
-
-  // Vérifier les changements de file toutes les 3 secondes
-  queueUpdateInterval = setInterval(() => {
-    const currentCount = parseInt(document.getElementById('waitingCount')?.textContent) || 0;
-    if (currentCount !== lastQueueCount) {
-      showUpdateIndicatorDOM();
-      setTimeout(() => {
-        updateQueueDisplayDOM();
-      }, 500);
-      lastQueueCount = currentCount;
-    }
-  }, 3000);
-
-  // Mettre à jour les temps d'attente toutes les 30 secondes
-  waitTimeUpdateInterval = setInterval(() => {
-    updateWaitTimesDOM();
-  }, 30000);
-}
-
-// Fonction pour nettoyer les intervalles
-function cleanupQueueDOM() {
-  if (queueUpdateInterval) {
-    clearInterval(queueUpdateInterval);
-  }
-  if (waitTimeUpdateInterval) {
-    clearInterval(waitTimeUpdateInterval);
-  }
-}
-
-// Fonction pour attacher les event listeners de manière robuste
-function attachEventListeners() {
-  console.log('Attachement des event listeners...');
-  
-  // Attendre que le DOM soit complètement chargé
-  const attachListeners = () => {
-    // Gérer les boutons même s'ils n'ont pas d'ID spécifique
-    const generateBtn = document.querySelector('[onclick*="generateTicket"]');
-    const callNextBtn = document.querySelector('[onclick*="callNextTicket"]');
-    const peekNextBtn = document.querySelector('[onclick*="peekNextTicket"]');
-    const showAllBtn = document.querySelector('[onclick*="showAllGuichets"]');
-    const resetBtn = document.querySelector('[onclick*="resetSystem"]');
-    const printBtn = document.querySelector('[onclick*="printReport"]');
-    const closeBtn = document.querySelector('[onclick*="closeModal"]');
-    
-    if (generateBtn) console.log('Bouton generateTicket trouvé');
-    if (callNextBtn) console.log('Bouton callNextTicket trouvé');
-    if (peekNextBtn) console.log('Bouton peekNextTicket trouvé');
-    if (showAllBtn) console.log('Bouton showAllGuichets trouvé');
-    if (resetBtn) console.log('Bouton resetSystem trouvé');
-    if (printBtn) console.log('Bouton printReport trouvé');
-    if (closeBtn) console.log('Bouton closeModal trouvé');
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachListeners);
-  } else {
-    attachListeners();
-  }
-}
-
-// Initialisation principale avec logs de débogage
-function initializeApp() {
-  console.log('=== INITIALISATION APP ===');
-  console.log('Hostname:', window.location.hostname);
-  console.log('API_URL:', API_URL);
-  console.log('Type generateTicket:', typeof generateTicket);
+// Initialisation DOM-dependent
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, initializing app...');
   
   initializeTicketCounter();
   getSize();
 
+  const guichetSelect = document.getElementById("guichetSelect");
   if (guichetSelect) {
     const guichetId = guichetSelect.value;
     fetch(`${API_URL}/guichet/${guichetId}`)
@@ -845,74 +389,30 @@ function initializeApp() {
       .then(text => updateTicketCalled(text))
       .catch(() => updateTicketCalled("---"));
   }
-
-  // Initialiser la gestion DOM de la file d'attente
-  initializeQueueDOM();
   
-  // Attacher les event listeners
-  attachEventListeners();
+  // Mise à jour périodique
+  setInterval(getSize, 5000);
   
-  console.log('=== INITIALISATION TERMINÉE ===');
-}
+  console.log('✅ App initialization complete');
+});
 
-// IMPORTANT: Exposer toutes les fonctions globalement APRÈS leur définition
-console.log('Exposition des fonctions globalement...');
-window.generateTicket = generateTicket;
-window.callNextTicket = callNextTicket;
-window.peekNextTicket = peekNextTicket;
-window.showAllGuichets = showAllGuichets;
-window.resetSystem = resetSystem;
-window.printReport = printReport;
-window.closeModal = closeModal;
-window.confirmAction = confirmAction;
-window.closeNotification = closeNotification;
-
-// Vérifier immédiatement que les fonctions sont bien exposées
-console.log('Vérification des fonctions exposées:');
-console.log('- generateTicket:', typeof window.generateTicket);
-console.log('- callNextTicket:', typeof window.callNextTicket);
-console.log('- peekNextTicket:', typeof window.peekNextTicket);
-console.log('- showAllGuichets:', typeof window.showAllGuichets);
-console.log('- resetSystem:', typeof window.resetSystem);
-console.log('- printReport:', typeof window.printReport);
-console.log('- closeModal:', typeof window.closeModal);
-
-// Utiliser plusieurs points d'entrée pour assurer la compatibilité maximale
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-  initializeApp();
-}
-
-// Fallback avec window.onload
-window.addEventListener('load', () => {
-  console.log('Window loaded - vérification des fonctions globales');
-  console.log('window.generateTicket:', typeof window.generateTicket);
-  console.log('window.callNextTicket:', typeof window.callNextTicket);
-  console.log('window.peekNextTicket:', typeof window.peekNextTicket);
+// Test de vérification après chargement complet
+window.addEventListener('load', function() {
+  console.log('Window loaded - vérification finale des fonctions:');
+  console.log('generateTicket:', typeof window.generateTicket);
+  console.log('callNextTicket:', typeof window.callNextTicket);
   
-  // Test de connexion API
+  // Test API
   console.log('Test connexion API...');
   fetch(`${API_URL}/size`)
     .then(res => {
-      console.log('API Status:', res.status);
+      console.log('✅ API Status:', res.status);
       return res.text();
     })
     .then(text => {
-      console.log('API Response:', text);
+      console.log('✅ API Response:', text);
     })
     .catch(err => {
-      console.error('Erreur API:', err);
+      console.error('❌ Erreur API:', err);
     });
 });
-
-window.onload = () => {
-  // Fallback pour compatibilité
-  if (typeof window.generateTicket === 'undefined') {
-    console.warn('Fonctions non définies, re-initialisation...');
-    initializeApp();
-  }
-};
-
-  console.log('App initialization complete');
-}); // Fermeture du DOMContentLoaded wrapper
