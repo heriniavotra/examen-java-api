@@ -23,7 +23,85 @@ jobs:
           distribution: 'temurin'
 
       - name: 🧪 Compile Java
-        run: javac -d bin src/*.java
+        run: |
+          mkdir -p bin
+          javac -d bin src/*.java
+
+      - name: 🚀 Run Automated API Tests
+        run: |
+          # Rendre le script de test exécutable
+          chmod +x test-api.sh
+          
+          # Démarrer le serveur en arrière-plan
+          java -cp bin Main &
+          SERVER_PID=$!
+          
+          # Attendre que le serveur démarre
+          echo "⏳ Attente du démarrage du serveur..."
+          for i in {1..30}; do
+            if curl -s --max-time 2 http://localhost:8081/tickets/isEmpty > /dev/null 2>&1; then
+              echo "✅ Serveur démarré avec succès"
+              break
+            fi
+            sleep 2
+            echo "   Tentative $i/30..."
+          done
+          
+          # Lancer les tests automatiques
+          echo "🧪 Exécution des tests automatiques..."
+          java -cp bin ApiTest
+          TEST_EXIT_CODE=$?
+          
+          # Arrêter le serveur
+          echo "🛑 Arrêt du serveur..."
+          kill $SERVER_PID 2>/dev/null || true
+          
+          # Vérifier si les tests ont réussi
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "❌ Les tests ont échoué"
+            exit 1
+          fi
+          
+          echo "✅ Tous les tests sont passés avec succès!"
+
+      - name: 📊 Generate Test Report
+        if: always()
+        run: |
+          echo "# 📋 Rapport de Tests API" > test-report.md
+          echo "" >> test-report.md
+          echo "**Date:** $(date)" >> test-report.md
+          echo "**Commit:** ${{ github.sha }}" >> test-report.md
+          echo "**Branch:** ${{ github.ref_name }}" >> test-report.md
+          echo "" >> test-report.md
+          echo "## 🧪 Résultats des Tests" >> test-report.md
+          echo "" >> test-report.md
+          
+          # Relancer les tests pour capturer la sortie
+          java -cp bin Main &
+          SERVER_PID=$!
+          sleep 5
+          
+          # Capturer les résultats de test dans un fichier
+          java -cp bin ApiTest > test-results.txt 2>&1 || true
+          
+          # Ajouter les résultats au rapport
+          echo '```' >> test-report.md
+          cat test-results.txt >> test-report.md
+          echo '```' >> test-report.md
+          
+          # Arrêter le serveur
+          kill $SERVER_PID 2>/dev/null || true
+          
+          echo "📄 Rapport de test généré"
+
+      - name: 📎 Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            test-report.md
+            test-results.txt
 
       - name: 🧪 Run server in background (test)
         run: |
